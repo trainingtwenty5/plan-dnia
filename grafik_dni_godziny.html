@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mój Plan Dnia</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      width: 90%;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #eaeaea;
+    }
+    textarea {
+      width: 100%;
+      height: 50px;
+      border: none;
+      resize: none;
+      font-size: 14px;
+      padding: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .button-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mój Plan Dnia</h1>
+  <form id="planForm">
+    <table>
+      <thead>
+        <tr>
+          <th>Godzina</th>
+          <th>Poniedziałek</th>
+          <th>Wtorek</th>
+          <th>Środa</th>
+          <th>Czwartek</th>
+          <th>Piątek</th>
+          <th>Sobota</th>
+          <th>Niedziela</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+      </tbody>
+    </table>
+    <div class="button-row">
+      <button type="button" onclick="savePlan()">Zapisz plan</button>
+      <button type="button" onclick="print()">Drukuj plan</button>
+      <button type="button" onclick="clearPlan()">Wyczyść dane</button>
+      <button type="button" onclick="exportPlan()">Eksportuj do pliku</button>
+    </div>
+  </form>
+
+  <script>
+    function generateRows() {
+      const tbody = document.getElementById("tableBody");
+      for (let h = 6; h < 22; h++) {
+        const pad = n => n.toString().padStart(2, '0');
+        const hour = pad(h);
+        const next = pad(h + 1);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${hour}:00 - ${next}:00</td>
+          <td><textarea name="pon_${hour}"></textarea></td>
+          <td><textarea name="wt_${hour}"></textarea></td>
+          <td><textarea name="sr_${hour}"></textarea></td>
+          <td><textarea name="czw_${hour}"></textarea></td>
+          <td><textarea name="pt_${hour}"></textarea></td>
+          <td><textarea name="sob_${hour}"></textarea></td>
+          <td><textarea name="nd_${hour}"></textarea></td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    function savePlan() {
+      const formData = new FormData(document.getElementById('planForm'));
+      const entries = {};
+      formData.forEach((value, key) => {
+        entries[key] = value;
+      });
+      localStorage.setItem('planDnia', JSON.stringify(entries));
+      alert('Plan został zapisany!');
+    }
+
+    function clearPlan() {
+      if (confirm("Czy na pewno chcesz usunąć wszystkie dane?")) {
+        localStorage.removeItem('planDnia');
+        document.getElementById('planForm').reset();
+      }
+    }
+
+    function exportPlan() {
+      const data = localStorage.getItem('planDnia');
+      if (!data) {
+        alert("Brak danych do eksportu.");
+        return;
+      }
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plan_dnia.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    window.onload = () => {
+      generateRows();
+      const saved = localStorage.getItem('planDnia');
+      if (saved) {
+        const data = JSON.parse(saved);
+        for (const key in data) {
+          const el = document.querySelector(`[name="${key}"]`);
+          if (el) el.value = data[key];
+        }
+      }
+    };
+  </script>
+</body>
+</html>
